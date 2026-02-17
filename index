@@ -1,0 +1,1031 @@
+
+<!DOCTYPE html>
+<html lang="es" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ImpactBoard - Dashboard ONG</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script>
+        tailwind.config = { darkMode: 'class', theme: { extend: { colors: { primary: '#0ea5e9', secondary: '#8b5cf6', success: '#10b981', warning: '#f59e0b', danger: '#ef4444' } } }}
+    </script>
+    <style>
+        * { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+        *::-webkit-scrollbar { width: 6px; height: 6px; }
+        *::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .dark * { scrollbar-color: #475569 transparent; }
+        .dark *::-webkit-scrollbar-thumb { background: #475569; }
+        .glass { background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); }
+        .dark .glass { background: rgba(15,23,42,0.8); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.15); }
+        .nav-item { transition: all 0.2s; }
+        .nav-item:hover, .nav-item.active { background: linear-gradient(90deg, rgba(14,165,233,0.15), transparent); border-right: 3px solid #0ea5e9; }
+        .dark .nav-item:hover, .dark .nav-item.active { background: linear-gradient(90deg, rgba(14,165,233,0.2), transparent); }
+        .fade-in { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .slide-in { animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        .drop-zone { border: 2px dashed #cbd5e1; transition: all 0.3s; }
+        .drop-zone.dragover { border-color: #0ea5e9; background: rgba(14,165,233,0.05); }
+        .progress-bar { animation: progress 2s ease-out forwards; }
+        @keyframes progress { from { width: 0; } }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+    </style>
+<base target="_blank">
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 transition-colors duration-300">
+    <!-- Mobile Header -->
+    <div class="lg:hidden fixed top-0 left-0 right-0 h-16 glass z-50 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-700">
+        <div class="flex items-center gap-3">
+            <button id="mobile-menu-btn" class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                <i class="ph ph-list text-2xl"></i>
+            </button>
+            <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
+                <i class="ph ph-heart text-white text-xl"></i>
+            </div>
+            <span class="font-bold text-lg">ImpactBoard</span>
+        </div>
+        <button id="mobile-theme-toggle" class="p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+            <i class="ph ph-sun text-xl dark:hidden"></i>
+            <i class="ph ph-moon text-xl hidden dark:block"></i>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 glass border-r border-slate-200 dark:border-slate-700 z-40 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <div class="p-6">
+            <div class="flex items-center gap-3 mb-8">
+                <div class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shadow-lg shadow-primary/30">
+                    <i class="ph ph-heart text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-xl">ImpactBoard</h1>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Demo ONG</p>
+                </div>
+            </div>
+            <nav class="space-y-1">
+                <a href="#resumen" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium active" data-tab="resumen">
+                    <i class="ph ph-squares-four text-xl"></i> Resumen
+                </a>
+                <a href="#beneficiarios" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="beneficiarios">
+                    <i class="ph ph-users text-xl"></i> Beneficiarios
+                </a>
+                <a href="#finanzas" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="finanzas">
+                    <i class="ph ph-currency-dollar text-xl"></i> Finanzas
+                </a>
+                <a href="#proyectos" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="proyectos">
+                    <i class="ph ph-folder text-xl"></i> Proyectos
+                </a>
+                <a href="#capacidades" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="capacidades">
+                    <i class="ph ph-chart-bar text-xl"></i> Capacidades
+                </a>
+                <a href="#evidencias" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="evidencias">
+                    <i class="ph ph-camera text-xl"></i> Evidencias
+                </a>
+                <a href="#equipo" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="equipo">
+                    <i class="ph ph-user-circle text-xl"></i> Equipo
+                </a>
+                <a href="#reportes" class="nav-item flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium" data-tab="reportes">
+                    <i class="ph ph-file-text text-xl"></i> Reportes
+                </a>
+            </nav>
+        </div>
+        <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-200 dark:border-slate-700">
+            <button id="theme-toggle" class="hidden lg:flex w-full items-center gap-3 px-4 py-3 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+                <i class="ph ph-sun text-xl dark:hidden"></i>
+                <i class="ph ph-moon text-xl hidden dark:block"></i>
+                <span class="dark:hidden">Modo Oscuro</span>
+                <span class="hidden dark:block">Modo Claro</span>
+            </button>
+            <div class="flex items-center gap-3 px-4 py-3">
+                <img src="https://ui-avatars.com/api/?name=Admin+User&background=0ea5e9&color=fff" class="w-10 h-10 rounded-full">
+                <div class="flex-1 min-w-0">
+                    <p class="font-medium text-sm truncate">Administrador</p>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 truncate">admin@impactboard.org</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black/50 z-30 hidden lg:hidden"></div>
+
+    <!-- Main Content -->
+    <main class="lg:ml-72 pt-16 lg:pt-0 min-h-screen">
+        <div class="p-4 lg:p-8 max-w-7xl mx-auto">
+            <!-- Header -->
+            <header class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                <div>
+                    <h2 id="page-title" class="text-2xl lg:text-3xl font-bold">Panel de Control</h2>
+                    <p id="page-subtitle" class="text-slate-500 dark:text-slate-400 mt-1">Bienvenido de vuelta, Admin</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="showExportModal()" class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition">
+                        <i class="ph ph-download"></i> Exportar
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition shadow-lg shadow-primary/30">
+                        <i class="ph ph-plus"></i> Nuevo
+                    </button>
+                </div>
+            </header>
+
+            <!-- Tab: Resumen -->
+            <div id="tab-resumen" class="tab-content fade-in">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                    <div class="card-hover bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                                <i class="ph ph-users text-primary text-2xl"></i>
+                            </div>
+                            <span class="text-xs font-medium text-success flex items-center gap-1"><i class="ph ph-trend-up"></i> +12%</span>
+                        </div>
+                        <p class="text-3xl font-bold">2,847</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Beneficiarios Totales</p>
+                    </div>
+                    <div class="card-hover bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center">
+                                <i class="ph ph-currency-dollar text-success text-2xl"></i>
+                            </div>
+                            <span class="text-xs font-medium text-success flex items-center gap-1"><i class="ph ph-trend-up"></i> +8%</span>
+                        </div>
+                        <p class="text-3xl font-bold">$125.4K</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Presupuesto Ejecutado</p>
+                    </div>
+                    <div class="card-hover bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center">
+                                <i class="ph ph-folder text-secondary text-2xl"></i>
+                            </div>
+                            <span class="text-xs font-medium text-success flex items-center gap-1"><i class="ph ph-trend-up"></i> +3</span>
+                        </div>
+                        <p class="text-3xl font-bold">24</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Proyectos Activos</p>
+                    </div>
+                    <div class="card-hover bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center">
+                                <i class="ph ph-chart-pie-slice text-warning text-2xl"></i>
+                            </div>
+                            <span class="text-xs font-medium text-success flex items-center gap-1"><i class="ph ph-trend-up"></i> +5%</span>
+                        </div>
+                        <p class="text-3xl font-bold">87%</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Impacto Alcanzado</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-bold text-lg">Beneficiarios por Mes</h3>
+                            <select class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm">
+                                <option>2024</option>
+                                <option>2023</option>
+                            </select>
+                        </div>
+                        <canvas id="chart-beneficiarios" height="100"></canvas>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <h3 class="font-bold text-lg mb-6">Distribución por Programa</h3>
+                        <canvas id="chart-programas" height="200"></canvas>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-bold text-lg">Proyectos Recientes</h3>
+                            <a href="#proyectos" class="text-primary text-sm hover:underline">Ver todos</a>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center"><i class="ph ph-book text-primary text-xl"></i></div>
+                                <div class="flex-1"><p class="font-medium">Educación para Todos</p><p class="text-sm text-slate-500 dark:text-slate-400">1,245 beneficiarios</p></div>
+                                <div class="text-right"><p class="font-bold text-success">92%</p><p class="text-xs text-slate-500">completado</p></div>
+                            </div>
+                            <div class="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                <div class="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center"><i class="ph ph-heart-beat text-success text-xl"></i></div>
+                                <div class="flex-1"><p class="font-medium">Salud Comunitaria</p><p class="text-sm text-slate-500 dark:text-slate-400">892 beneficiarios</p></div>
+                                <div class="text-right"><p class="font-bold text-warning">78%</p><p class="text-xs text-slate-500">en progreso</p></div>
+                            </div>
+                            <div class="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl">
+                                <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center"><i class="ph ph-plant text-secondary text-xl"></i></div>
+                                <div class="flex-1"><p class="font-medium">Agricultura Sostenible</p><p class="text-sm text-slate-500 dark:text-slate-400">567 beneficiarios</p></div>
+                                <div class="text-right"><p class="font-bold text-primary">45%</p><p class="text-xs text-slate-500">iniciado</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-bold text-lg">Actividad Reciente</h3>
+                            <button class="text-primary text-sm hover:underline">Ver todo</button>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-3"><div class="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1"><i class="ph ph-user-plus text-primary text-sm"></i></div><div class="flex-1"><p class="text-sm"><span class="font-medium">Nuevo beneficiario</span> registrado en <span class="text-primary">Educación para Todos</span></p><p class="text-xs text-slate-500 mt-1">Hace 5 minutos</p></div></div>
+                            <div class="flex items-start gap-3"><div class="w-8 h-8 bg-success/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1"><i class="ph ph-check-circle text-success text-sm"></i></div><div class="flex-1"><p class="text-sm">Proyecto <span class="font-medium">Salud Comunitaria</span> alcanzó el 75%</p><p class="text-xs text-slate-500 mt-1">Hace 1 hora</p></div></div>
+                            <div class="flex items-start gap-3"><div class="w-8 h-8 bg-warning/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1"><i class="ph ph-upload text-warning text-sm"></i></div><div class="flex-1"><p class="text-sm"><span class="font-medium">5 evidencias</span> subidas al proyecto</p><p class="text-xs text-slate-500 mt-1">Hace 3 horas</p></div></div>
+                            <div class="flex items-start gap-3"><div class="w-8 h-8 bg-secondary/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1"><i class="ph ph-currency-dollar text-secondary text-sm"></i></div><div class="flex-1"><p class="text-sm">Donación recibida: <span class="font-medium text-success">$5,000</span></p><p class="text-xs text-slate-500 mt-1">Hace 5 horas</p></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Beneficiarios -->
+            <div id="tab-beneficiarios" class="tab-content hidden fade-in">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <p class="text-3xl font-bold text-primary">2,847</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Total Beneficiarios</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <p class="text-3xl font-bold text-success">1,523</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Mujeres (53%)</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <p class="text-3xl font-bold text-secondary">1,324</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Hombres (47%)</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <p class="text-3xl font-bold text-warning">892</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400">Niños menores de 12</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <h3 class="font-bold text-lg mb-4">Por Edad</h3>
+                        <canvas id="chart-edad" height="200"></canvas>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <h3 class="font-bold text-lg mb-4">Por Género</h3>
+                        <canvas id="chart-genero" height="200"></canvas>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <h3 class="font-bold text-lg mb-4">Por Ubicación</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between"><span class="text-sm">Ciudad Capital</span><span class="font-medium">1,245</span></div>
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2"><div class="bg-primary h-2 rounded-full" style="width:44%"></div></div>
+                            <div class="flex items-center justify-between"><span class="text-sm">Zona Rural Norte</span><span class="font-medium">892</span></div>
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2"><div class="bg-success h-2 rounded-full" style="width:31%"></div></div>
+                            <div class="flex items-center justify-between"><span class="text-sm">Zona Rural Sur</span><span class="font-medium">456</span></div>
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2"><div class="bg-secondary h-2 rounded-full" style="width:16%"></div></div>
+                            <div class="flex items-center justify-between"><span class="text-sm">Comunidades Indígenas</span><span class="font-medium">254</span></div>
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2"><div class="bg-warning h-2 rounded-full" style="width:9%"></div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row gap-4">
+                        <div class="relative flex-1">
+                            <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input type="text" id="search-beneficiarios" placeholder="Buscar beneficiario..." class="w-full pl-10 pr-4 py-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                        </div>
+                        <select class="px-4 py-2 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm">
+                            <option>Todos los programas</option>
+                            <option>Educación</option>
+                            <option>Salud</option>
+                            <option>Agricultura</option>
+                        </select>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-50 dark:bg-slate-700/50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Beneficiario</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Edad</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Ubicación</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Programa</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Estado</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-beneficiarios" class="divide-y divide-slate-200 dark:divide-slate-700">
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="px-4 py-3"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=Maria+Garcia&background=random" class="w-8 h-8 rounded-full"><div><p class="font-medium text-sm">Maria Garcia</p><p class="text-xs text-slate-500">ID: B-2024-001</p></div></div></td><td class="px-4 py-3 text-sm">34 años</td><td class="px-4 py-3 text-sm">Ciudad Capital</td><td class="px-4 py-3"><span class="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Educación</span></td><td class="px-4 py-3"><span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Activo</span></td><td class="px-4 py-3"><button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded"><i class="ph ph-dots-three-vertical"></i></button></td></tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="px-4 py-3"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=Carlos+Lopez&background=random" class="w-8 h-8 rounded-full"><div><p class="font-medium text-sm">Carlos Lopez</p><p class="text-xs text-slate-500">ID: B-2024-002</p></div></div></td><td class="px-4 py-3 text-sm">28 años</td><td class="px-4 py-3 text-sm">Zona Rural Norte</td><td class="px-4 py-3"><span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Salud</span></td><td class="px-4 py-3"><span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Activo</span></td><td class="px-4 py-3"><button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded"><i class="ph ph-dots-three-vertical"></i></button></td></tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="px-4 py-3"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=Ana+Martinez&background=random" class="w-8 h-8 rounded-full"><div><p class="font-medium text-sm">Ana Martinez</p><p class="text-xs text-slate-500">ID: B-2024-003</p></div></div></td><td class="px-4 py-3 text-sm">42 años</td><td class="px-4 py-3 text-sm">Zona Rural Sur</td><td class="px-4 py-3"><span class="px-2 py-1 bg-secondary/10 text-secondary text-xs rounded-full">Agricultura</span></td><td class="px-4 py-3"><span class="px-2 py-1 bg-warning/10 text-warning text-xs rounded-full">Pendiente</span></td><td class="px-4 py-3"><button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded"><i class="ph ph-dots-three-vertical"></i></button></td></tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="px-4 py-3"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=Pedro+Sanchez&background=random" class="w-8 h-8 rounded-full"><div><p class="font-medium text-sm">Pedro Sanchez</p><p class="text-xs text-slate-500">ID: B-2024-004</p></div></div></td><td class="px-4 py-3 text-sm">56 años</td><td class="px-4 py-3 text-sm">Comunidad Indígena A</td><td class="px-4 py-3"><span class="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Educación</span></td><td class="px-4 py-3"><span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Activo</span></td><td class="px-4 py-3"><button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded"><i class="ph ph-dots-three-vertical"></i></button></td></tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="px-4 py-3"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=Laura+Torres&background=random" class="w-8 h-8 rounded-full"><div><p class="font-medium text-sm">Laura Torres</p><p class="text-xs text-slate-500">ID: B-2024-005</p></div></div></td><td class="px-4 py-3 text-sm">31 años</td><td class="px-4 py-3 text-sm">Ciudad Capital</td><td class="px-4 py-3"><span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Salud</span></td><td class="px-4 py-3"><span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Activo</span></td><td class="px-4 py-3"><button class="p-1 hover:bg-slate-200 dark:hover:bg-slate-600 rounded"><i class="ph ph-dots-three-vertical"></i></button></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <p class="text-sm text-slate-500">Mostrando 1-5 de 2,847</p>
+                        <div class="flex gap-2">
+                            <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm disabled:opacity-50" disabled>Anterior</button>
+                            <button class="px-3 py-1 bg-primary text-white rounded-lg text-sm">1</button>
+                            <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm">2</button>
+                            <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm">3</button>
+                            <button class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-lg text-sm">Siguiente</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Finanzas -->
+            <div id="tab-finanzas" class="tab-content hidden fade-in">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Presupuesto Total</p>
+                        <p class="text-3xl font-bold text-primary">$250,000</p>
+                        <p class="text-xs text-success mt-2"><i class="ph ph-trend-up"></i> +15% vs año anterior</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Ejecutado</p>
+                        <p class="text-3xl font-bold text-success">$125,400</p>
+                        <p class="text-xs text-slate-500 mt-2">50.2% del presupuesto</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-1">Disponible</p>
+                        <p class="text-3xl font-bold text-secondary">$124,600</p>
+                        <p class="text-xs text-slate-500 mt-2">49.8% restante</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <h3 class="font-bold text-lg mb-4">Ejecución Presupuestaria</h3>
+                        <canvas id="chart-presupuesto" height="150"></canvas>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <h3 class="font-bold text-lg mb-4">Gastos por Categoría</h3>
+                        <canvas id="chart-gastos" height="150"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <h3 class="font-bold text-lg">Transacciones Recientes</h3>
+                        <button class="text-primary text-sm hover:underline">Ver todas</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-50 dark:bg-slate-700/50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Fecha</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Descripción</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Categoría</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Monto</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="px-4 py-3 text-sm">15 Ene 2024</td><td class="px-4 py-3 text-sm font-medium">Donación Fundación XYZ</td><td class="px-4 py-3 text-sm">Ingreso</td><td class="px-4 py-3 text-sm font-medium text-success">+$25,000</td><td class="px-4 py-3"><span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Completado</span></td></tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="px-4 py-3 text-sm">14 Ene 2024</td><td class="px-4 py-3 text-sm font-medium">Materiales Educativos</td><td class="px-4 py-3 text-sm">Programas</td><td class="px-4 py-3 text-sm font-medium text-danger">-$3,500</td><td class="px-4 py-3"><span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Completado</span></td></tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="px-4 py-3 text-sm">12 Ene 2024</td><td class="px-4 py-3 text-sm font-medium">Equipamiento Médico</td><td class="px-4 py-3 text-sm">Salud</td><td class="px-4 py-3 text-sm font-medium text-danger">-$8,200</td><td class="px-4 py-3"><span class="px-2 py-1 bg-warning/10 text-warning text-xs rounded-full">Pendiente</span></td></tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="px-4 py-3 text-sm">10 Ene 2024</td><td class="px-4 py-3 text-sm font-medium">Subvención Gubernamental</td><td class="px-4 py-3 text-sm">Ingreso</td><td class="px-4 py-3 text-sm font-medium text-success">+$50,000</td><td class="px-4 py-3"><span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Completado</span></td></tr>
+                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50"><td class="px-4 py-3 text-sm">08 Ene 2024</td><td class="px-4 py-3 text-sm font-medium">Nómina Enero</td><td class="px-4 py-3 text-sm">Operativo</td><td class="px-4 py-3 text-sm font-medium text-danger">-$12,000</td><td class="px-4 py-3"><span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Completado</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Proyectos -->
+            <div id="tab-proyectos" class="tab-content hidden fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 card-hover">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center"><i class="ph ph-book text-primary text-2xl"></i></div>
+                            <span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Activo</span>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Educación para Todos</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Programa de alfabetización y educación primaria para comunidades rurales.</p>
+                        <div class="mb-4"><div class="flex justify-between text-sm mb-1"><span>Progreso</span><span class="font-medium">92%</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2"><div class="bg-primary h-2 rounded-full progress-bar" style="width:92%"></div></div></div>
+                        <div class="flex items-center justify-between text-sm"><span class="text-slate-500"><i class="ph ph-users mr-1"></i> 1,245 beneficiarios</span><span class="text-slate-500">Dic 2024</span></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 card-hover">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center"><i class="ph ph-heart-beat text-success text-2xl"></i></div>
+                            <span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Activo</span>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Salud Comunitaria</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Brigadas médicas y campañas de vacunación en zonas de difícil acceso.</p>
+                        <div class="mb-4"><div class="flex justify-between text-sm mb-1"><span>Progreso</span><span class="font-medium">78%</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2"><div class="bg-success h-2 rounded-full progress-bar" style="width:78%"></div></div></div>
+                        <div class="flex items-center justify-between text-sm"><span class="text-slate-500"><i class="ph ph-users mr-1"></i> 892 beneficiarios</span><span class="text-slate-500">Mar 2025</span></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 card-hover">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center"><i class="ph ph-plant text-secondary text-2xl"></i></div>
+                            <span class="px-2 py-1 bg-primary/10 text-primary text-xs rounded-full">Nuevo</span>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Agricultura Sostenible</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Capacitación en técnicas agrícolas sostenibles y orgánicas.</p>
+                        <div class="mb-4"><div class="flex justify-between text-sm mb-1"><span>Progreso</span><span class="font-medium">45%</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2"><div class="bg-secondary h-2 rounded-full progress-bar" style="width:45%"></div></div></div>
+                        <div class="flex items-center justify-between text-sm"><span class="text-slate-500"><i class="ph ph-users mr-1"></i> 567 beneficiarios</span><span class="text-slate-500">Jun 2025</span></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 card-hover">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center"><i class="ph ph-drop text-warning text-2xl"></i></div>
+                            <span class="px-2 py-1 bg-warning/10 text-warning text-xs rounded-full">Planificación</span>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Agua Limpia</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Instalación de sistemas de filtración y captación de agua lluvia.</p>
+                        <div class="mb-4"><div class="flex justify-between text-sm mb-1"><span>Progreso</span><span class="font-medium">15%</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2"><div class="bg-warning h-2 rounded-full progress-bar" style="width:15%"></div></div></div>
+                        <div class="flex items-center justify-between text-sm"><span class="text-slate-500"><i class="ph ph-users mr-1"></i> 320 beneficiarios</span><span class="text-slate-500">Sep 2025</span></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 card-hover">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="w-12 h-12 bg-danger/10 rounded-xl flex items-center justify-center"><i class="ph ph-lightning text-danger text-2xl"></i></div>
+                            <span class="px-2 py-1 bg-success/10 text-success text-xs rounded-full">Activo</span>
+                        </div>
+                        <h3 class="font-bold text-lg mb-2">Energía Renovable</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Instalación de paneles solares en escuelas rurales.</p>
+                        <div class="mb-4"><div class="flex justify-between text-sm mb-1"><span>Progreso</span><span class="font-medium">65%</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2"><div class="bg-danger h-2 rounded-full progress-bar" style="width:65%"></div></div></div>
+                        <div class="flex items-center justify-between text-sm"><span class="text-slate-500"><i class="ph ph-users mr-1"></i> 480 beneficiarios</span><span class="text-slate-500">May 2025</span></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 card-hover border-dashed flex items-center justify-center min-h-[280px]">
+                        <button class="flex flex-col items-center gap-3 text-slate-400 hover:text-primary transition">
+                            <div class="w-16 h-16 rounded-full border-2 border-dashed border-current flex items-center justify-center"><i class="ph ph-plus text-3xl"></i></div>
+                            <span class="font-medium">Crear Nuevo Proyecto</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Capacidades -->
+            <div id="tab-capacidades" class="tab-content hidden fade-in">
+                <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 mb-6">
+                    <h3 class="font-bold text-lg mb-4">Evaluación de Capacidades Organizacionales</h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <canvas id="chart-radar" height="250"></canvas>
+                        <div class="space-y-4">
+                            <div><div class="flex justify-between mb-1"><span class="text-sm font-medium">Gobernanza</span><span class="text-sm font-bold">85%</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3"><div class="bg-primary h-3 rounded-full" style="width:85%"></div></div><p class="text-xs text-slate-500 mt-1">Estructura organizativa clara y definida</p></div>
+                            <div><div class="flex justify-between mb-1"><span class="text-sm font-medium">Gestión de Proyectos</span><span class="text-sm font-bold">78%</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3"><div class="bg-success h-3 rounded-full" style="width:78%"></div></div><p class="text-xs text-slate-500 mt-1">Buenas prácticas en planificación y ejecución</p></div>
+                            <div><div class="flex justify-between mb-1"><span class="text-sm font-medium">Finanzas</span><span class="text-sm font-bold">72%</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3"><div class="bg-secondary h-3 rounded-full" style="width:72%"></div></div><p class="text-xs text-slate-500 mt-1">Control presupuestario en mejora continua</p></div>
+                            <div><div class="flex justify-between mb-1"><span class="text-sm font-medium">Recursos Humanos</span><span class="text-sm font-bold">68%</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3"><div class="bg-warning h-3 rounded-full" style="width:68%"></div></div><p class="text-xs text-slate-500 mt-1">Necesita fortalecer capacitación del equipo</p></div>
+                            <div><div class="flex justify-between mb-1"><span class="text-sm font-medium">Monitoreo y Evaluación</span><span class="text-sm font-bold">80%</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3"><div class="bg-danger h-3 rounded-full" style="width:80%"></div></div><p class="text-xs text-slate-500 mt-1">Sistema de seguimiento bien establecido</p></div>
+                            <div><div class="flex justify-between mb-1"><span class="text-sm font-medium">Comunicación</span><span class="text-sm font-bold">75%</span></div><div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3"><div class="bg-primary h-3 rounded-full" style="width:75%"></div></div><p class="text-xs text-slate-500 mt-1">Estrategia de comunicación en desarrollo</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center"><i class="ph ph-trend-up text-primary text-2xl"></i></div>
+                            <div><p class="text-2xl font-bold">+23%</p><p class="text-sm text-slate-500">Crecimiento anual</p></div>
+                        </div>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">La organización ha mostrado un crecimiento sostenido en los últimos 3 años.</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-success/10 rounded-xl flex items-center justify-center"><i class="ph ph-certificate text-success text-2xl"></i></div>
+                            <div><p class="text-2xl font-bold">12</p><p class="text-sm text-slate-500">Certificaciones</p></div>
+                        </div>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Contamos con certificaciones internacionales en gestión de calidad.</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-12 h-12 bg-secondary/10 rounded-xl flex items-center justify-center"><i class="ph ph-users-three text-secondary text-2xl"></i></div>
+                            <div><p class="text-2xl font-bold">45</p><p class="text-sm text-slate-500">Voluntarios</p></div>
+                        </div>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Red activa de voluntarios comprometidos con la misión.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Evidencias -->
+            <div id="tab-evidencias" class="tab-content hidden fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <div class="lg:col-span-2">
+                        <div id="drop-zone" class="drop-zone bg-white dark:bg-slate-800 rounded-2xl p-8 border border-slate-200 dark:border-slate-700 text-center">
+                            <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4"><i class="ph ph-cloud-arrow-up text-primary text-4xl"></i></div>
+                            <h3 class="font-bold text-lg mb-2">Arrastra archivos aquí</h3>
+                            <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">o haz clic para seleccionar archivos</p>
+                            <input type="file" id="file-input" multiple accept="image/*,video/*,.pdf" class="hidden">
+                            <button onclick="document.getElementById('file-input').click()" class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition">Seleccionar Archivos</button>
+                            <p class="text-xs text-slate-400 mt-4">Soporta: JPG, PNG, MP4, PDF (máx. 50MB)</p>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                        <h3 class="font-bold text-lg mb-4">Estadísticas</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><span class="text-sm">Total Evidencias</span><span class="font-bold text-xl">156</span></div>
+                            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><span class="text-sm">Imágenes</span><span class="font-bold text-xl text-primary">98</span></div>
+                            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><span class="text-sm">Videos</span><span class="font-bold text-xl text-success">32</span></div>
+                            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700/50 rounded-lg"><span class="text-sm">Documentos</span><span class="font-bold text-xl text-secondary">26</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                        <h3 class="font-bold text-lg">Galería de Evidencias</h3>
+                        <div class="flex gap-2">
+                            <button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><i class="ph ph-squares-four"></i></button>
+                            <button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><i class="ph ph-list"></i></button>
+                        </div>
+                    </div>
+                    <div id="evidencias-grid" class="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        <div class="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"><img src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=300&h=300&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition"><div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><i class="ph ph-magnifying-glass-plus text-white text-2xl"></i></div></div>
+                        <div class="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"><img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=300&h=300&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition"><div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><i class="ph ph-magnifying-glass-plus text-white text-2xl"></i></div></div>
+                        <div class="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"><img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=300&h=300&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition"><div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><i class="ph ph-magnifying-glass-plus text-white text-2xl"></i></div></div>
+                        <div class="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"><img src="https://images.unsplash.com/photo-1594708767771-a7502f4e6f59?w=300&h=300&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition"><div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><i class="ph ph-magnifying-glass-plus text-white text-2xl"></i></div></div>
+                        <div class="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"><img src="https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=300&h=300&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition"><div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><i class="ph ph-magnifying-glass-plus text-white text-2xl"></i></div></div>
+                        <div class="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"><img src="https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=300&h=300&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition"><div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><i class="ph ph-magnifying-glass-plus text-white text-2xl"></i></div></div>
+                        <div class="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"><img src="https://images.unsplash.com/photo-1542810634-71277d95dcbb?w=300&h=300&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition"><div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><i class="ph ph-magnifying-glass-plus text-white text-2xl"></i></div></div>
+                        <div class="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"><img src="https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=300&h=300&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition"><div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><i class="ph ph-magnifying-glass-plus text-white text-2xl"></i></div></div>
+                        <div class="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"><img src="https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=300&h=300&fit=crop" class="w-full h-full object-cover group-hover:scale-110 transition"><div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"><i class="ph ph-magnifying-glass-plus text-white text-2xl"></i></div></div>
+                        <div class="group relative aspect-square rounded-xl overflow-hidden cursor-pointer bg-slate-100 dark:bg-slate-700 flex items-center justify-center"><i class="ph ph-file-pdf text-danger text-4xl"></i><div class="absolute bottom-2 left-2 right-2"><p class="text-xs truncate">informe_anual.pdf</p></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Equipo -->
+            <div id="tab-equipo" class="tab-content hidden fade-in">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 text-center card-hover">
+                        <img src="https://ui-avatars.com/api/?name=Ana+Rodriguez&background=0ea5e9&color=fff&size=128" class="w-24 h-24 rounded-full mx-auto mb-4">
+                        <h3 class="font-bold text-lg">Ana Rodriguez</h3>
+                        <p class="text-primary text-sm mb-2">Directora Ejecutiva</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">15 años de experiencia en gestión de ONGs</p>
+                        <div class="flex justify-center gap-3"><a href="#" class="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-primary hover:text-white transition"><i class="ph ph-linkedin-logo"></i></a><a href="#" class="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-primary hover:text-white transition"><i class="ph ph-envelope"></i></a></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 text-center card-hover">
+                        <img src="https://ui-avatars.com/api/?name=Carlos+Mendez&background=10b981&color=fff&size=128" class="w-24 h-24 rounded-full mx-auto mb-4">
+                        <h3 class="font-bold text-lg">Carlos Mendez</h3>
+                        <p class="text-success text-sm mb-2">Director de Programas</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Especialista en desarrollo comunitario</p>
+                        <div class="flex justify-center gap-3"><a href="#" class="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-success hover:text-white transition"><i class="ph ph-linkedin-logo"></i></a><a href="#" class="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-success hover:text-white transition"><i class="ph ph-envelope"></i></a></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 text-center card-hover">
+                        <img src="https://ui-avatars.com/api/?name=Laura+Gomez&background=8b5cf6&color=fff&size=128" class="w-24 h-24 rounded-full mx-auto mb-4">
+                        <h3 class="font-bold text-lg">Laura Gomez</h3>
+                        <p class="text-secondary text-sm mb-2">Directora Financiera</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">CPA con experiencia en auditoría social</p>
+                        <div class="flex justify-center gap-3"><a href="#" class="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-secondary hover:text-white transition"><i class="ph ph-linkedin-logo"></i></a><a href="#" class="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-secondary hover:text-white transition"><i class="ph ph-envelope"></i></a></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 text-center card-hover">
+                        <img src="https://ui-avatars.com/api/?name=Pedro+Vargas&background=f59e0b&color=fff&size=128" class="w-24 h-24 rounded-full mx-auto mb-4">
+                        <h3 class="font-bold text-lg">Pedro Vargas</h3>
+                        <p class="text-warning text-sm mb-2">Coordinador de Voluntarios</p>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Gestión de redes de voluntariado</p>
+                        <div class="flex justify-center gap-3"><a href="#" class="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-warning hover:text-white transition"><i class="ph ph-linkedin-logo"></i></a><a href="#" class="p-2 bg-slate-100 dark:bg-slate-700 rounded-lg hover:bg-warning hover:text-white transition"><i class="ph ph-envelope"></i></a></div>
+                    </div>
+                </div>
+                <div class="mt-8 bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
+                    <h3 class="font-bold text-lg mb-4">Estructura Organizacional</h3>
+                    <div class="flex flex-col items-center">
+                        <div class="bg-primary text-white px-6 py-3 rounded-xl font-medium mb-4">Junta Directiva</div>
+                        <div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div>
+                        <div class="bg-secondary text-white px-6 py-3 rounded-xl font-medium mb-4">Directora Ejecutiva</div>
+                        <div class="w-px h-8 bg-slate-300 dark:bg-slate-600"></div>
+                        <div class="grid grid-cols-3 gap-4 w-full max-w-2xl">
+                            <div class="text-center"><div class="bg-success/10 dark:bg-success/20 text-success px-4 py-2 rounded-lg font-medium text-sm">Programas</div></div>
+                            <div class="text-center"><div class="bg-warning/10 dark:bg-warning/20 text-warning px-4 py-2 rounded-lg font-medium text-sm">Finanzas</div></div>
+                            <div class="text-center"><div class="bg-danger/10 dark:bg-danger/20 text-danger px-4 py-2 rounded-lg font-medium text-sm">Operaciones</div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Reportes -->
+            <div id="tab-reportes" class="tab-content hidden fade-in">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 card-hover">
+                        <div class="w-14 h-14 bg-primary/10 rounded-xl flex items-center justify-center mb-4"><i class="ph ph-file-pdf text-primary text-3xl"></i></div>
+                        <h3 class="font-bold text-lg mb-2">Informe Anual 2023</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Resumen completo de actividades, logros e impacto del año.</p>
+                        <div class="flex items-center justify-between"><span class="text-xs text-slate-400">PDF • 4.2 MB</span><button class="px-4 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary/90 transition"><i class="ph ph-download mr-1"></i> Descargar</button></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 card-hover">
+                        <div class="w-14 h-14 bg-success/10 rounded-xl flex items-center justify-center mb-4"><i class="ph ph-file-xls text-success text-3xl"></i></div>
+                        <h3 class="font-bold text-lg mb-2">Base de Datos Beneficiarios</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Listado completo de beneficiarios con datos demográficos.</p>
+                        <div class="flex items-center justify-between"><span class="text-xs text-slate-400">Excel • 1.8 MB</span><button class="px-4 py-2 bg-success text-white rounded-lg text-sm hover:bg-success/90 transition"><i class="ph ph-download mr-1"></i> Descargar</button></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 card-hover">
+                        <div class="w-14 h-14 bg-secondary/10 rounded-xl flex items-center justify-center mb-4"><i class="ph ph-chart-bar text-secondary text-3xl"></i></div>
+                        <h3 class="font-bold text-lg mb-2">Análisis de Impacto Q4</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Métricas detalladas de impacto del último trimestre.</p>
+                        <div class="flex items-center justify-between"><span class="text-xs text-slate-400">PDF • 2.1 MB</span><button class="px-4 py-2 bg-secondary text-white rounded-lg text-sm hover:bg-secondary/90 transition"><i class="ph ph-download mr-1"></i> Descargar</button></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 card-hover">
+                        <div class="w-14 h-14 bg-warning/10 rounded-xl flex items-center justify-center mb-4"><i class="ph ph-presentation text-warning text-3xl"></i></div>
+                        <h3 class="font-bold text-lg mb-2">Presentación Donantes</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Presentación para potenciales donantes y aliados.</p>
+                        <div class="flex items-center justify-between"><span class="text-xs text-slate-400">PPT • 8.5 MB</span><button class="px-4 py-2 bg-warning text-white rounded-lg text-sm hover:bg-warning/90 transition"><i class="ph ph-download mr-1"></i> Descargar</button></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 card-hover">
+                        <div class="w-14 h-14 bg-danger/10 rounded-xl flex items-center justify-center mb-4"><i class="ph ph-file-text text-danger text-3xl"></i></div>
+                        <h3 class="font-bold text-lg mb-2">Estados Financieros</h3>
+                        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">Balance general y estado de resultados auditado.</p>
+                        <div class="flex items-center justify-between"><span class="text-xs text-slate-400">PDF • 3.7 MB</span><button class="px-4 py-2 bg-danger text-white rounded-lg text-sm hover:bg-danger/90 transition"><i class="ph ph-download mr-1"></i> Descargar</button></div>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 rounded-2xl p-6 border border-slate-200 dark:border-slate-700 card-hover border-dashed flex items-center justify-center min-h-[200px]">
+                        <button class="flex flex-col items-center gap-3 text-slate-400 hover:text-primary transition">
+                            <div class="w-16 h-16 rounded-full border-2 border-dashed border-current flex items-center justify-center"><i class="ph ph-plus text-3xl"></i></div>
+                            <span class="font-medium">Solicitar Reporte Personalizado</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="fixed inset-0 bg-black/50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 slide-in">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="font-bold text-xl">Exportar Datos</h3>
+                <button onclick="closeExportModal()" class="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg"><i class="ph ph-x"></i></button>
+            </div>
+            <p class="text-slate-500 dark:text-slate-400 mb-6">Selecciona el formato de exportación:</p>
+            <div class="space-y-3">
+                <button onclick="exportData('json')" class="w-full flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-primary hover:bg-primary/5 transition">
+                    <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center"><i class="ph ph-file-code text-primary text-2xl"></i></div>
+                    <div class="text-left"><p class="font-medium">Exportar como JSON</p><p class="text-sm text-slate-500">Datos estructurados para desarrolladores</p></div>
+                </button>
+                <button onclick="exportData('csv')" class="w-full flex items-center gap-4 p-4 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-success hover:bg-success/5 transition">
+                    <div class="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center"><i class="ph ph-file-csv text-success text-2xl"></i></div>
+                    <div class="text-left"><p class="font-medium">Exportar como CSV</p><p class="text-sm text-slate-500">Compatible con Excel y otras herramientas</p></div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
+    <script>
+        // Theme Management
+        const themeToggle = document.getElementById('theme-toggle');
+        const mobileThemeToggle = document.getElementById('mobile-theme-toggle');
+        const html = document.documentElement;
+        
+        function toggleTheme() {
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            updateCharts();
+        }
+        
+        themeToggle?.addEventListener('click', toggleTheme);
+        mobileThemeToggle?.addEventListener('click', toggleTheme);
+        
+        if (localStorage.getItem('theme') === 'dark') {
+            html.classList.remove('light');
+            html.classList.add('dark');
+        }
+        
+        // Mobile Sidebar
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('overlay');
+        
+        function toggleSidebar() {
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+        
+        mobileMenuBtn?.addEventListener('click', toggleSidebar);
+        overlay?.addEventListener('click', toggleSidebar);
+        
+        // Navigation
+        const navItems = document.querySelectorAll('.nav-item');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const pageTitle = document.getElementById('page-title');
+        const pageSubtitle = document.getElementById('page-subtitle');
+        
+        const tabInfo = {
+            resumen: { title: 'Panel de Control', subtitle: 'Bienvenido de vuelta, Admin' },
+            beneficiarios: { title: 'Beneficiarios', subtitle: 'Gestión de personas atendidas' },
+            finanzas: { title: 'Finanzas', subtitle: 'Control presupuestario' },
+            proyectos: { title: 'Proyectos', subtitle: 'Seguimiento de iniciativas' },
+            capacidades: { title: 'Capacidades', subtitle: 'Evaluación organizacional' },
+            evidencias: { title: 'Evidencias', subtitle: 'Documentación y archivos' },
+            equipo: { title: 'Equipo', subtitle: 'Gestión de personal' },
+            reportes: { title: 'Reportes', subtitle: 'Documentos descargables' }
+        };
+        
+        function showTab(tabId) {
+            tabContents.forEach(tab => tab.classList.add('hidden'));
+            document.getElementById('tab-' + tabId)?.classList.remove('hidden');
+            navItems.forEach(item => item.classList.remove('active'));
+            document.querySelector('[data-tab="' + tabId + '"]').classList.add('active');
+            if (tabInfo[tabId]) {
+                pageTitle.textContent = tabInfo[tabId].title;
+                pageSubtitle.textContent = tabInfo[tabId].subtitle;
+            }
+            if (window.innerWidth < 1024) toggleSidebar();
+        }
+        
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const tabId = item.getAttribute('data-tab');
+                window.location.hash = tabId;
+                showTab(tabId);
+            });
+        });
+        
+        window.addEventListener('hashchange', () => {
+            const tabId = window.location.hash.slice(1) || 'resumen';
+            showTab(tabId);
+        });
+        
+        // Initialize
+        const initialTab = window.location.hash.slice(1) || 'resumen';
+        showTab(initialTab);
+        
+        // Charts
+        let charts = {};
+        
+        function initCharts() {
+            const isDark = html.classList.contains('dark');
+            const textColor = isDark ? '#94a3b8' : '#64748b';
+            const gridColor = isDark ? '#334155' : '#e2e8f0';
+            
+            // Beneficiarios Chart
+            const ctxBen = document.getElementById('chart-beneficiarios');
+            if (ctxBen) {
+                charts.beneficiarios = new Chart(ctxBen, {
+                    type: 'line',
+                    data: {
+                        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                        datasets: [{
+                            label: 'Beneficiarios 2024',
+                            data: [180, 220, 280, 320, 380, 420, 480, 520, 580, 640, 720, 800],
+                            borderColor: '#0ea5e9',
+                            backgroundColor: 'rgba(14, 165, 233, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }, {
+                            label: 'Beneficiarios 2023',
+                            data: [150, 180, 220, 260, 300, 340, 380, 420, 460, 500, 540, 580],
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { labels: { color: textColor } } },
+                        scales: {
+                            x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                            y: { ticks: { color: textColor }, grid: { color: gridColor } }
+                        }
+                    }
+                });
+            }
+            
+            // Programas Chart
+            const ctxProg = document.getElementById('chart-programas');
+            if (ctxProg) {
+                charts.programas = new Chart(ctxProg, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Educación', 'Salud', 'Agricultura', 'Agua', 'Energía'],
+                        datasets: [{
+                            data: [1245, 892, 567, 320, 480],
+                            backgroundColor: ['#0ea5e9', '#10b981', '#8b5cf6', '#f59e0b', '#ef4444']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'bottom', labels: { color: textColor } } }
+                    }
+                });
+            }
+            
+            // Edad Chart
+            const ctxEdad = document.getElementById('chart-edad');
+            if (ctxEdad) {
+                charts.edad = new Chart(ctxEdad, {
+                    type: 'bar',
+                    data: {
+                        labels: ['0-12', '13-18', '19-35', '36-50', '51+'],
+                        datasets: [{
+                            label: 'Beneficiarios',
+                            data: [892, 456, 723, 489, 287],
+                            backgroundColor: '#0ea5e9'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                            y: { ticks: { color: textColor }, grid: { color: gridColor } }
+                        }
+                    }
+                });
+            }
+            
+            // Genero Chart
+            const ctxGenero = document.getElementById('chart-genero');
+            if (ctxGenero) {
+                charts.genero = new Chart(ctxGenero, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Mujeres', 'Hombres'],
+                        datasets: [{
+                            data: [1523, 1324],
+                            backgroundColor: ['#ec4899', '#3b82f6']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'bottom', labels: { color: textColor } } }
+                    }
+                });
+            }
+            
+            // Presupuesto Chart
+            const ctxPres = document.getElementById('chart-presupuesto');
+            if (ctxPres) {
+                charts.presupuesto = new Chart(ctxPres, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                        datasets: [{
+                            label: 'Presupuestado',
+                            data: [40000, 35000, 42000, 38000, 45000, 40000],
+                            backgroundColor: '#8b5cf6'
+                        }, {
+                            label: 'Ejecutado',
+                            data: [38000, 32000, 40000, 35000, 42000, 18500],
+                            backgroundColor: '#10b981'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { labels: { color: textColor } } },
+                        scales: {
+                            x: { ticks: { color: textColor }, grid: { color: gridColor } },
+                            y: { ticks: { color: textColor }, grid: { color: gridColor } }
+                        }
+                    }
+                });
+            }
+            
+            // Gastos Chart
+            const ctxGastos = document.getElementById('chart-gastos');
+            if (ctxGastos) {
+                charts.gastos = new Chart(ctxGastos, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Programas', 'Operativo', 'Personal', 'Infraestructura', 'Otros'],
+                        datasets: [{
+                            data: [45000, 25000, 35000, 15000, 5400],
+                            backgroundColor: ['#0ea5e9', '#10b981', '#8b5cf6', '#f59e0b', '#64748b']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { position: 'bottom', labels: { color: textColor } } }
+                    }
+                });
+            }
+            
+            // Radar Chart
+            const ctxRadar = document.getElementById('chart-radar');
+            if (ctxRadar) {
+                charts.radar = new Chart(ctxRadar, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Gobernanza', 'Gestión Proyectos', 'Finanzas', 'RRHH', 'M&E', 'Comunicación'],
+                        datasets: [{
+                            label: 'Capacidad Actual',
+                            data: [85, 78, 72, 68, 80, 75],
+                            borderColor: '#0ea5e9',
+                            backgroundColor: 'rgba(14, 165, 233, 0.2)'
+                        }, {
+                            label: 'Meta',
+                            data: [90, 85, 85, 80, 90, 85],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderDash: [5, 5]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: { legend: { labels: { color: textColor } } },
+                        scales: {
+                            r: {
+                                ticks: { color: textColor, backdropColor: 'transparent' },
+                                grid: { color: gridColor },
+                                pointLabels: { color: textColor }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function updateCharts() {
+            Object.values(charts).forEach(chart => chart.destroy());
+            charts = {};
+            initCharts();
+        }
+        
+        // Initialize charts on load
+        initCharts();
+        
+        // Drag & Drop
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        
+        if (dropZone) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.add('dragover'));
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, () => dropZone.classList.remove('dragover'));
+            });
+            
+            dropZone.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                handleFiles(files);
+            });
+        }
+        
+        fileInput?.addEventListener('change', (e) => handleFiles(e.target.files));
+        
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                showToast('Archivo "' + file.name + '" subido exitosamente', 'success');
+            });
+        }
+        
+        // Toast Notifications
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colors = { success: 'bg-success', error: 'bg-danger', warning: 'bg-warning', info: 'bg-primary' };
+            const icons = { success: 'ph-check-circle', error: 'ph-x-circle', warning: 'ph-warning', info: 'ph-info' };
+            toast.className = colors[type] + ' text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 slide-in';
+            toast.innerHTML = '<i class="ph ' + icons[type] + ' text-xl"></i><span>' + message + '</span>';
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        
+        // Export Modal
+        function showExportModal() {
+            document.getElementById('export-modal').classList.remove('hidden');
+            document.getElementById('export-modal').classList.add('flex');
+        }
+        
+        function closeExportModal() {
+            document.getElementById('export-modal').classList.add('hidden');
+            document.getElementById('export-modal').classList.remove('flex');
+        }
+        
+        function exportData(format) {
+            const data = {
+                beneficiarios: 2847,
+                presupuestoTotal: 250000,
+                presupuestoEjecutado: 125400,
+                proyectosActivos: 24,
+                fechaExportacion: new Date().toISOString()
+            };
+            
+            let content, filename, mimeType;
+            
+            if (format === 'json') {
+                content = JSON.stringify(data, null, 2);
+                filename = 'impactboard_export.json';
+                mimeType = 'application/json';
+            } else {
+                content = 'Key,Value\nBeneficiarios,' + data.beneficiarios + '\nPresupuesto Total,' + data.presupuestoTotal + '\nPresupuesto Ejecutado,' + data.presupuestoEjecutado + '\nProyectos Activos,' + data.proyectosActivos;
+                filename = 'impactboard_export.csv';
+                mimeType = 'text/csv';
+            }
+            
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            closeExportModal();
+            showToast('Exportación completada', 'success');
+        }
+        
+        // Search Beneficiarios
+        const searchInput = document.getElementById('search-beneficiarios');
+        searchInput?.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('#tabla-beneficiarios tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>
